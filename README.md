@@ -1,19 +1,17 @@
 # PDK prototype
 
 This is a prototype PDK implementation using a content template system
-
-## Goals
-
-The objective is to make the Puppet user and developer experience phenomenal
-
-- Redefine the Puppet developer experience for beginners and experts alike
-- Provide a supported way to create, modify and test Puppet content
-- Provide content through templatized starter projects
-- Enable Puppet teams and the Puppet community to create/contribute content templates
-
 # The prototype command
 
 The `prototype` command creates a Puppet project or other artifacts based on a Puppet Content Template (PCT).
+
+## Features
+
+- 'No special language knowledge needed' to create a template
+- Compiled/No Runtime needed
+- Configuration instead of Interview/Prompting
+- Building block for upstream projects
+- Continuous Integration top-level support
 
 The command calls the template engine to create the artifacts on disk based on the specified template and options.
 

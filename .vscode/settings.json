@@ -14,5 +14,9 @@
     "editor.codeActionsOnSave": {
       "source.organizeImports": true
     }
-  }
+  },
+  "go.lintTool":"golangci-lint",
+  "go.lintFlags": [
+    "--fast"
+  ]
 }
