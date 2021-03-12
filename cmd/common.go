@@ -22,31 +22,31 @@ const (
 
 // PrototypeAppConfig is the main app config variable
 type PrototypeAppConfig struct {
-	LocalTemplatePath string
-	TargetName        string
-	TargetOutput      string
-	ListTemplates     bool
-	SelectedTemplate  string
-	OutputFormat      string
-	Author            string
-	Summary           string
-	License           string
-	Source            string
+	LocalTemplateCache string
+	ListTemplates      bool
+	TargetName         string
+	TargetOutput       string
+	SelectedTemplate   string
+	OutputFormat       string
+	Author             string
+	Summary            string
+	License            string
+	Source             string
 }
 
 var (
 	// Config is the main app config variable
 	Config = PrototypeAppConfig{
-		LocalTemplatePath: "",
-		TargetName:        "",
-		TargetOutput:      "",
-		SelectedTemplate:  "",
-		ListTemplates:     false,
-		OutputFormat:      "",
-		Author:            "",
-		Summary:           "",
-		License:           "",
-		Source:            "",
+		LocalTemplateCache: "",
+		TargetName:         "",
+		TargetOutput:       "",
+		SelectedTemplate:   "",
+		ListTemplates:      false,
+		OutputFormat:       "",
+		Author:             "",
+		Summary:            "",
+		License:            "",
+		Source:             "",
 	}
 )
 
@@ -69,7 +69,7 @@ func initializeConfig(cmd *cobra.Command) error {
 			return err
 		}
 	} else {
-		fmt.Printf("Config: %v :: %v\n", v.ConfigFileUsed(), v.AllSettings())
+		cobra.CompDebugln(fmt.Sprintf("Config: %v :: %v\n", v.ConfigFileUsed(), v.AllSettings()), true)
 	}
 
 	v.SetEnvPrefix(EnvironmentVariablePrefix)
@@ -80,22 +80,27 @@ func initializeConfig(cmd *cobra.Command) error {
 		// keys with underscores, e.g. --favorite-color to PROTO_FAVORITE_COLOR
 		if strings.Contains(f.Name, "-") {
 			envVarSuffix := strings.ToUpper(strings.ReplaceAll(f.Name, "-", "_"))
-			v.BindEnv(f.Name, fmt.Sprintf("%s_%s", EnvironmentVariablePrefix, envVarSuffix))
+			v.BindEnv(f.Name, fmt.Sprintf("%s_%s", EnvironmentVariablePrefix, envVarSuffix)) //nolint:errcheck
 		}
 
 		// Apply the viper config value to the flag when the flag is not set and viper has a value
 		if !f.Changed && v.IsSet(f.Name) {
 			val := v.Get(f.Name)
-			fmt.Printf("name: %v changed:%v set:%v\n", f.Name, !f.Changed, v.IsSet(f.Name))
-			cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val))
+			// fmt.Printf("name: %v changed:%v set:%v\n", f.Name, !f.Changed, v.IsSet(f.Name))
+			cobra.CompDebugln(fmt.Sprintf("name: %v changed:%v set:%v\n", f.Name, !f.Changed, v.IsSet(f.Name)), true)
+			cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val)) //nolint:errcheck
 		}
 	})
 
-	err = v.Unmarshal(&Config)
+	// have to do this for completions to work
+	Config.LocalTemplateCache = filepath.Join(home, ".pdk", "templates")
+
+	_ = v.Unmarshal(&Config)
 	return nil
 }
 
-func loadDefaultSettingsFor(v *viper.Viper) error {
+func loadDefaultSettingsFor(v *viper.Viper) {
+	cobra.CompDebugln("setting default templates", true)
 	home, _ := homedir.Dir()
 	v.SetDefault("templates", filepath.Join(home, ".pdk", "templates"))
 	// cwd, _ := os.Getwd()
@@ -113,12 +118,15 @@ func loadDefaultSettingsFor(v *viper.Viper) error {
 	viper.SetDefault("author", currentUser)
 	viper.SetDefault("license", "Apache2")
 	viper.SetDefault("source", "")
-	return nil
+
+	viper.SetDefault("version", "0.1.0")
+	viper.SetDefault("commithash", "a4b89ba")
+	viper.SetDefault("builddata", "2020-06-27")
 }
 
 // osExit is a copy of `os.Exit` to ease the "exit status" test.
 // See: https://stackoverflow.com/a/40801733/8367711
-var osExit = os.Exit
+// var osExit = os.Exit //nolint:errcheck
 
 // EchoStdErrIfError is an STDERR wrappter and returns 0(zero) or 1.
 // It does nothing if the error is nil and returns 0.
