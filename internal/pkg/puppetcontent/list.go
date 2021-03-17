@@ -2,8 +2,6 @@ package puppetcontent
 
 import (
 	"io/ioutil"
-	"log"
-	"os"
 	"path/filepath"
 
 	"gopkg.in/yaml.v2"
@@ -22,29 +20,14 @@ type ContentTemplateConfig struct {
 
 // List gets all installed Puppet Content Templates
 func List(templatePath string, templateName string) ([]ContentTemplateConfig, error) {
-	var tmpls []ContentTemplateConfig
-	if err := filepath.WalkDir(templatePath,
-		func(path string, info os.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
+	var tmpls []ContentTemplateConfig = nil
 
-			file := filepath.Join(templatePath, info.Name(), "templateconfig.yml")
-			if !pathExists(file) {
-				return nil
-			}
-
-			tmpl, err := read(file)
-			if err != nil {
-				// TODO print stderr here not stdout
-				log.Println("Error: ", err)
-			}
-
+	matches, _ := filepath.Glob(templatePath + "/**/templateconfig.yml")
+	for _, file := range matches {
+		tmpl, err := read(file)
+		if err == nil {
 			tmpls = append(tmpls, tmpl)
-
-			return nil
-		}); err != nil {
-		return []ContentTemplateConfig{}, err
+		}
 	}
 
 	if templateName != "" {
@@ -52,18 +35,6 @@ func List(templatePath string, templateName string) ([]ContentTemplateConfig, er
 	}
 
 	return tmpls, nil
-}
-
-func pathExists(path string) bool {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true
-	}
-
-	if os.IsNotExist(err) {
-		return false
-	}
-	return false
 }
 
 func filterFiles(ss []ContentTemplateConfig, test func(ContentTemplateConfig) bool) (ret []ContentTemplateConfig) {

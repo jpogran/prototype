@@ -32,6 +32,21 @@ type PrototypeAppConfig struct {
 	Summary            string
 	License            string
 	Source             string
+
+	UnitTest TestCmd
+}
+
+type TestCmd struct {
+	OutputFormat           string
+	TestCmdDebug           bool
+	TestCmdFormat          string
+	UnitTestCleanFixtures  bool
+	ListUnitTestFiles      bool
+	ParallelUnitTests      bool
+	PuppetDevSourceVersion string
+	PuppetVersion          string
+	UnitTestsToRun         string
+	VerboseUnitTestOutput  bool
 }
 
 var (
@@ -47,6 +62,7 @@ var (
 		Summary:            "",
 		License:            "",
 		Source:             "",
+		UnitTest:           TestCmd{},
 	}
 )
 
@@ -69,7 +85,7 @@ func initializeConfig(cmd *cobra.Command) error {
 			return err
 		}
 	} else {
-		cobra.CompDebugln(fmt.Sprintf("Config: %v :: %v\n", v.ConfigFileUsed(), v.AllSettings()), true)
+		cobra.CompDebugln(fmt.Sprintf("Config: %v :: %v\n", v.ConfigFileUsed(), v.AllSettings()), false)
 	}
 
 	v.SetEnvPrefix(EnvironmentVariablePrefix)
@@ -86,8 +102,8 @@ func initializeConfig(cmd *cobra.Command) error {
 		// Apply the viper config value to the flag when the flag is not set and viper has a value
 		if !f.Changed && v.IsSet(f.Name) {
 			val := v.Get(f.Name)
-			// fmt.Printf("name: %v changed:%v set:%v\n", f.Name, !f.Changed, v.IsSet(f.Name))
-			cobra.CompDebugln(fmt.Sprintf("name: %v changed:%v set:%v\n", f.Name, !f.Changed, v.IsSet(f.Name)), true)
+			fmt.Printf("name: %v changed:%v set:%v\n", f.Name, !f.Changed, v.IsSet(f.Name))
+			cobra.CompDebugln(fmt.Sprintf("name: %v changed:%v set:%v\n", f.Name, !f.Changed, v.IsSet(f.Name)), false)
 			cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val)) //nolint:errcheck
 		}
 	})
@@ -100,13 +116,13 @@ func initializeConfig(cmd *cobra.Command) error {
 }
 
 func loadDefaultSettingsFor(v *viper.Viper) {
-	cobra.CompDebugln("setting default templates", true)
+	cobra.CompDebugln("setting default templates", false)
 	home, _ := homedir.Dir()
 	v.SetDefault("templates", filepath.Join(home, ".pdk", "templates"))
 	// cwd, _ := os.Getwd()
 	// v.SetDefault("name", filepath.Base(cwd))
 	// v.SetDefault("output", cwd)
-	v.SetDefault("format", "table")
+	v.SetDefault("formatoutput", "table")
 
 	var currentUser string
 	u, _ := user.Current()

@@ -1,0 +1,12 @@
+---
+name: "examplegood"
+display_name: "Example Good Template"
+tags: ["puppet"]
+context: "puppetmodule"
+template_type: "project"
+template_url: "https://github.com/puppetlabs/examplegood"
+template_version: 0.1.0
+# template_data:
+#   supported_operating_systems:
+#     - name: windows
+#       release: 2019
