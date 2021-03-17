@@ -102,7 +102,7 @@ func initializeConfig(cmd *cobra.Command) error {
 		// Apply the viper config value to the flag when the flag is not set and viper has a value
 		if !f.Changed && v.IsSet(f.Name) {
 			val := v.Get(f.Name)
-			fmt.Printf("name: %v changed:%v set:%v\n", f.Name, !f.Changed, v.IsSet(f.Name))
+			// fmt.Printf("name: %v changed:%v set:%v\n", f.Name, !f.Changed, v.IsSet(f.Name))
 			cobra.CompDebugln(fmt.Sprintf("name: %v changed:%v set:%v\n", f.Name, !f.Changed, v.IsSet(f.Name)), false)
 			cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val)) //nolint:errcheck
 		}

@@ -11,6 +11,8 @@ import (
 )
 
 type TemplateData struct {
+	TemplatesPath string
+
 	TemplateName string
 
 	ProjectName string
@@ -101,10 +103,6 @@ func Deploy(SelectedTemplate string, LocalTemplateCache string, TargetOutput str
 
 	contentDir := filepath.Join(LocalTemplateCache, SelectedTemplate, "content")
 
-	log.Printf("TemplateDir: %s\n", LocalTemplateCache)
-	log.Printf("Output: %s\n", TargetOutput)
-	log.Printf("Name: %s\n", TargetName)
-
 	var templateFiles []ContentTemplateFile
 	if err := filepath.WalkDir(contentDir,
 		func(path string, info os.DirEntry, err error) error {
@@ -173,9 +171,10 @@ func Deploy(SelectedTemplate string, LocalTemplateCache string, TargetOutput str
 
 func buildTemplateData(SelectedTemplate string, LocalTemplateCache string, TargetOutput string, TargetName string) TemplateData {
 	data := TemplateData{
-		TemplateName: SelectedTemplate,
-		ProjectName:  filepath.Base(TargetOutput),
-		ItemName:     TargetName,
+		TemplatesPath: LocalTemplateCache,
+		TemplateName:  SelectedTemplate,
+		ProjectName:   filepath.Base(TargetOutput),
+		ItemName:      TargetName,
 
 		Author:  viper.GetString("author"),
 		Summary: viper.GetString("summary"),
@@ -185,6 +184,7 @@ func buildTemplateData(SelectedTemplate string, LocalTemplateCache string, Targe
 
 	localTemplatePath := filepath.Join(LocalTemplateCache, SelectedTemplate)
 	tmplConfig, _ := read(filepath.Join(localTemplatePath, "templateconfig.yml"))
+
 	data.TemplateConfig = tmplConfig
 
 	data.Prototype = PrototypeInfo{

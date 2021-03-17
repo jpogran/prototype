@@ -26,6 +26,7 @@ func createNewCommand() *cobra.Command {
 			{{.ItemName}}
 
 		Global Variables
+			{{.TemplatesPath}}
 			{{.Author}}
 			{{.Summary}}
 			{{.License}}
@@ -79,7 +80,6 @@ func createNewCommand() *cobra.Command {
 
 			switch Config.OutputFormat {
 			case "table":
-				fmt.Println("")
 				for _, d := range deployed {
 					log.Printf("Deployed: %v", d)
 				}

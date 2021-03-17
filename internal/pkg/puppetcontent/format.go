@@ -1,10 +1,11 @@
 package puppetcontent
 
 import (
-	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/olekukonko/tablewriter"
 )
 
@@ -31,7 +32,13 @@ func Format(configs []ContentTemplateConfig, format string) {
 			table.Render()
 		}
 	case "json":
-		prettyJSON, _ := json.MarshalIndent(configs, "", "  ")
+		// fmt.Printf("%+v", configs)
+		// prettyJSON, err := json.MarshalIndent(&configs, "", "  ")
+		var json = jsoniter.ConfigCompatibleWithStandardLibrary
+		prettyJSON, err := json.Marshal(&configs)
+		if err != nil {
+			log.Printf("Error converting to json: %v", err)
+		}
 		fmt.Printf("%s\n", string(prettyJSON))
 	}
 }
