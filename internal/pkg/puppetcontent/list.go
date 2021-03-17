@@ -2,7 +2,6 @@ package puppetcontent
 
 import (
 	"io/ioutil"
-	"log"
 	"path/filepath"
 
 	"gopkg.in/yaml.v2"
@@ -26,10 +25,7 @@ func List(templatePath string, templateName string) ([]ContentTemplateConfig, er
 	matches, _ := filepath.Glob(templatePath + "/**/templateconfig.yml")
 	for _, file := range matches {
 		tmpl, err := read(file)
-		if err != nil {
-			// TODO print stderr here not stdout
-			log.Println("Error: ", err)
-		} else {
+		if err == nil {
 			tmpls = append(tmpls, tmpl)
 		}
 	}
