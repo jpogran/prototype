@@ -9,13 +9,14 @@ import (
 
 // ContentTemplateConfig is the config for a Puppet Content Template module
 type ContentTemplateConfig struct {
-	Name            string   `yaml:"name"`
-	DisplayName     string   `yaml:"display_name"`
-	Context         string   `yaml:"context"`
-	Tags            []string `yaml:"tags"`
-	TemplateType    string   `yaml:"template_type"`
-	TemplateURL     string   `yaml:"template_url"`
-	TemplateVersion string   `yaml:"template_version"`
+	Name            string                 `yaml:"name"`
+	DisplayName     string                 `yaml:"display_name"`
+	Context         string                 `yaml:"context"`
+	Tags            []string               `yaml:"tags"`
+	TemplateType    string                 `yaml:"template_type"`
+	TemplateURL     string                 `yaml:"template_url"`
+	TemplateVersion string                 `yaml:"template_version"`
+	TemplateData    map[string]interface{} `yaml:"template_data"`
 }
 
 // List gets all installed Puppet Content Templates
