@@ -95,7 +95,7 @@ func createNewCommand() *cobra.Command {
 	viper.BindPFlag("templates", tmp.Flags().Lookup("templates")) //nolint:errcheck
 	tmp.Flags().StringVarP(&Config.TargetName, "name", "n", "", "the name for the created output. (default is the name of the current directory)")
 	tmp.Flags().StringVarP(&Config.TargetOutput, "output", "o", "", "location to place the generated output. (default is the current directory)")
-	tmp.Flags().StringVarP(&Config.OutputFormat, "format", "f", "", "formating (default is table)")
+	tmp.Flags().StringVarP(&Config.OutputFormat, "formatoutput", "f", "", "formating (default is table)")
 	tmp.Flags().BoolVarP(&Config.ListTemplates, "list", "l", false, "list templates")
 	tmp.RegisterFlagCompletionFunc("list", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) { //nolint:errcheck
 		if len(args) != 0 {
