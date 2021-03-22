@@ -7,6 +7,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -48,6 +49,7 @@ func Deploy(SelectedTemplate string, LocalTemplateCache string, TargetOutput str
 
 	file := filepath.Join(LocalTemplateCache, SelectedTemplate, "templateconfig.yml")
 	tmpl, _ := read(file)
+	logrus.Debugf("Parsed: %+v", tmpl)
 
 	// prototype new foo-foo
 	if TargetName == "" && TargetOutput == "" {
@@ -99,9 +101,13 @@ func Deploy(SelectedTemplate string, LocalTemplateCache string, TargetOutput str
 		// }
 	}
 
+	contentDir := filepath.Join(LocalTemplateCache, SelectedTemplate, "content")
 	data := buildTemplateData(SelectedTemplate, LocalTemplateCache, TargetOutput, TargetName)
 
-	contentDir := filepath.Join(LocalTemplateCache, SelectedTemplate, "content")
+	logrus.Debugf("Name: %s", TargetName)
+	logrus.Debugf("Output: %s", TargetOutput)
+	logrus.Debugf("ContentDir: %+v", contentDir)
+	logrus.Tracef("Data: %+v", data)
 
 	var templateFiles []ContentTemplateFile
 	if err := filepath.WalkDir(contentDir,
@@ -110,12 +116,15 @@ func Deploy(SelectedTemplate string, LocalTemplateCache string, TargetOutput str
 				return err
 			}
 
+			logrus.Tracef("Processing: %s", path)
+
 			replacer := strings.NewReplacer(
 				contentDir, TargetOutput,
 				"__REPLACE__", TargetName,
 				".tmpl", "",
 			)
 			targetFile := replacer.Replace(path)
+			logrus.Tracef("Targetfile: %s", path)
 
 			dir, file := filepath.Split(targetFile)
 			i := ContentTemplateFile{
@@ -125,6 +134,7 @@ func Deploy(SelectedTemplate string, LocalTemplateCache string, TargetOutput str
 				TargetFile:     file,
 				IsDirectory:    info.IsDir(),
 			}
+			logrus.Tracef("Processed: %+v", i)
 
 			templateFiles = append(templateFiles, i)
 			return nil
@@ -136,29 +146,41 @@ func Deploy(SelectedTemplate string, LocalTemplateCache string, TargetOutput str
 	var deployedFiles []string
 
 	for _, templateFile := range templateFiles {
+		logrus.Tracef("Deploying: %+v", templateFile)
+
 		if templateFile.IsDirectory {
 			if _, err := os.Stat(templateFile.TargetFilePath); os.IsNotExist(err) {
+				logrus.Tracef("Creating: %s", templateFile.TargetFilePath)
 				err := os.MkdirAll(templateFile.TargetFilePath, os.ModePerm)
 				if err != nil {
+					logrus.Tracef("Created: %s", templateFile.TargetFilePath)
 					errs = append(errs, err)
 				}
 			}
 		} else {
+			logrus.Tracef("Creating: %s", templateFile.TargetDir)
 			err := os.MkdirAll(templateFile.TargetDir, os.ModePerm)
 			if err != nil {
+				logrus.Tracef("Created: %s", templateFile.TargetDir)
 				errs = append(errs, err)
 			}
+			logrus.Tracef("Parsing: %s", templateFile.TemplatePath)
 			t, err := template.ParseFiles(templateFile.TemplatePath)
 			if err != nil {
+				logrus.Tracef("Parsed: %s", templateFile.TemplatePath)
 				errs = append(errs, err)
 			}
 
+			logrus.Tracef("Creating: %s", templateFile.TargetFilePath)
 			actualTargetFile, err := os.Create(templateFile.TargetFilePath)
 			if err != nil {
+				logrus.Tracef("Created: %s", templateFile.TargetFilePath)
 				errs = append(errs, err)
 			}
+			logrus.Tracef("Templating: %s", templateFile.TargetFilePath)
 			err = t.Execute(actualTargetFile, data)
 			if err != nil {
+				logrus.Tracef("Templed: %s", templateFile.TargetFilePath)
 				errs = append(errs, err)
 			}
 		}

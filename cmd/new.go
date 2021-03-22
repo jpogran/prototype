@@ -3,109 +3,113 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"path/filepath"
 
 	"github.com/jpogran/prototype/internal/pkg/puppetcontent"
+	homedir "github.com/mitchellh/go-homedir"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var newCmd = createNewCommand()
+var (
+	localTemplateCache string
+	jsonOutput         bool
 
-func init() {
-	rootCmd.AddCommand(newCmd)
-}
+	selectedTemplate string
+	listTemplates    bool
 
-func createNewCommand() *cobra.Command {
-	tmp := &cobra.Command{
-		Use:   "new",
-		Short: "creates a Puppet project or other artifact based on a template",
-		Long: `creates a Puppet project or other artifact based on a template
-		Project Level Variables
-			{{.ProjectName}}
-			{{.ItemName}}
+	targetName   string
+	targetOutput string
+)
 
-		Global Variables
-			{{.TemplatesPath}}
-			{{.Author}}
-			{{.Summary}}
-			{{.License}}
-			{{.Source}}
-			{{.PuppetContentTemplate.URL}}
-			{{.PuppetContentTemplate.Version}}
+var newCmd = &cobra.Command{
+	Use:   "new",
+	Short: "creates a Puppet project or other artifact based on a template",
+	Long:  `creates a Puppet project or other artifact based on a template`,
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 && !listTemplates {
+			listTemplates = true
+		}
 
-		Prototype Variables
-			{{.Prototype.Version}}
-			{{.Prototype.CommitHash}}
-			{{.Prototype.BuildDate}}`,
-		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-			if len(args) != 0 {
-				return nil, cobra.ShellCompDirectiveNoFileComp
-			}
-			return puppetcontent.CompleteName(Config.LocalTemplateCache, toComplete), cobra.ShellCompDirectiveNoSpace | cobra.ShellCompDirectiveNoFileComp
-		},
-		Args: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 && !Config.ListTemplates {
-				Config.ListTemplates = true
-			}
+		if targetName == "" && len(args) == 2 {
+			targetName = args[1]
+		}
 
-			if Config.TargetName == "" && len(args) == 2 {
-				Config.TargetName = args[1]
-			}
+		if len(args) >= 1 {
+			selectedTemplate = args[0]
+		}
 
-			if len(args) >= 1 {
-				Config.SelectedTemplate = args[0]
-			}
-
-			return nil
-		},
-		PreRun: func(cmd *cobra.Command, args []string) {
-		},
-		RunE: func(cmd *cobra.Command, args []string) error {
-			if Config.ListTemplates {
-				tmpls, err := puppetcontent.List(Config.LocalTemplateCache, Config.SelectedTemplate)
-				if err != nil {
-					return err
-				}
-
-				puppetcontent.Format(tmpls, Config.OutputFormat)
-
-				return nil
-			}
-
-			deployed, errs := puppetcontent.Deploy(Config.SelectedTemplate, Config.LocalTemplateCache, Config.TargetOutput, Config.TargetName)
-			for e := range errs {
-				log.Printf("Error: %v", e)
-			}
-
-			switch Config.OutputFormat {
-			case "table":
-				for _, d := range deployed {
-					log.Printf("Deployed: %v", d)
-				}
-			case "json":
-				prettyJSON, _ := json.MarshalIndent(deployed, "", "  ")
-				fmt.Printf("%s\n", string(prettyJSON))
-			}
-
-			return nil
-		},
-	}
-	tmp.Flags().StringVarP(&Config.LocalTemplateCache, "templates", "t", "", "template install directory (default is $HOME/.pdk/templates)")
-	viper.BindPFlag("templates", tmp.Flags().Lookup("templates")) //nolint:errcheck
-	tmp.Flags().StringVarP(&Config.TargetName, "name", "n", "", "the name for the created output. (default is the name of the current directory)")
-	tmp.Flags().StringVarP(&Config.TargetOutput, "output", "o", "", "location to place the generated output. (default is the current directory)")
-	tmp.Flags().StringVarP(&Config.OutputFormat, "formatoutput", "f", "", "formating (default is table)")
-	tmp.Flags().BoolVarP(&Config.ListTemplates, "list", "l", false, "list templates")
-	tmp.RegisterFlagCompletionFunc("list", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) { //nolint:errcheck
+		return nil
+	},
+	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		if len(args) != 0 {
 			return nil, cobra.ShellCompDirectiveNoFileComp
 		}
-		return puppetcontent.CompleteName(Config.LocalTemplateCache, toComplete), cobra.ShellCompDirectiveNoSpace | cobra.ShellCompDirectiveNoFileComp
+		localTemplateCache = viper.GetString("templatepath")
+		return puppetcontent.CompleteName(localTemplateCache, toComplete), cobra.ShellCompDirectiveNoSpace | cobra.ShellCompDirectiveNoFileComp
+	},
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		logrus.Trace("new PreRunE")
+		bindAllFlagsForCommand(cmd)
+		return nil
+	},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		logrus.Trace("new Run")
+		logrus.Tracef("Templatepath: %v", localTemplateCache)
+
+		if listTemplates {
+			tmpls, err := puppetcontent.List(localTemplateCache, "")
+			if err != nil {
+				return err
+			}
+
+			puppetcontent.Format(tmpls, jsonOutput)
+
+			return nil
+		}
+
+		deployed, errs := puppetcontent.Deploy(
+			selectedTemplate,
+			localTemplateCache,
+			targetOutput,
+			targetName,
+		)
+
+		for e := range errs {
+			logrus.Errorf("Error: %v", e)
+		}
+
+		if jsonOutput {
+			prettyJSON, _ := json.MarshalIndent(deployed, "", "  ")
+			fmt.Printf("%s\n", string(prettyJSON))
+		} else {
+			for _, d := range deployed {
+				logrus.Infof("Deployed: %v", d)
+			}
+		}
+
+		return nil
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(newCmd)
+
+	home, _ := homedir.Dir()
+	newCmd.Flags().StringVar(&localTemplateCache, "templatepath", "", "Log level (debug, info, warn, error, fatal, panic")
+	viper.SetDefault("templatepath", filepath.Join(home, ".pdk", "puppet-content-templates"))
+	viper.BindPFlag("templatepath", newCmd.Flags().Lookup("templatepath"))
+
+	newCmd.Flags().BoolVar(&jsonOutput, "json", false, "json output")
+	newCmd.Flags().BoolVarP(&listTemplates, "list", "l", false, "list templates")
+	newCmd.RegisterFlagCompletionFunc("list", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) { //nolint:errcheck
+		if len(args) != 0 {
+			return nil, cobra.ShellCompDirectiveNoFileComp
+		}
+		return puppetcontent.CompleteName(localTemplateCache, toComplete), cobra.ShellCompDirectiveNoSpace | cobra.ShellCompDirectiveNoFileComp
 	})
-	tmp.Flags().StringVar(&Config.Author, "author", "", "the author name. (default is the current user name)")
-	tmp.Flags().StringVar(&Config.Summary, "summary", "", "the purpose of the content")
-	tmp.Flags().StringVar(&Config.License, "license", "", "the license for the content (default is Apache2)")
-	tmp.Flags().StringVar(&Config.Source, "source", "", "the source control repository link for this content")
-	return tmp
+
+	newCmd.Flags().StringVarP(&targetName, "name", "n", "", "the name for the created output. (default is the name of the current directory)")
+	newCmd.Flags().StringVarP(&targetOutput, "output", "o", "", "location to place the generated output. (default is the current directory)")
 }
