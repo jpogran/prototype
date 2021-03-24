@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
 
@@ -25,13 +26,18 @@ func List(templatePath string, templateName string) ([]ContentTemplateConfig, er
 
 	matches, _ := filepath.Glob(templatePath + "/**/templateconfig.yml")
 	for _, file := range matches {
+		logrus.Debugf("Found: %+v", file)
 		tmpl, err := read(file)
 		if err == nil {
+			logrus.Debugf("Parsed: %+v", tmpl)
 			tmpls = append(tmpls, tmpl)
+		} else {
+			logrus.Debugf("Error parsing %s : %+v", file, err)
 		}
 	}
 
 	if templateName != "" {
+		logrus.Debugf("Filtering for: %s", templateName)
 		tmpls = filterFiles(tmpls, func(f ContentTemplateConfig) bool { return f.Name == templateName })
 	}
 

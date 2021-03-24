@@ -10,9 +10,17 @@ import (
 )
 
 // Format displays an array of Puppet Content Template config entries
-func Format(configs []ContentTemplateConfig, format string) {
-	switch format {
-	case "table":
+func Format(configs []ContentTemplateConfig, json bool) {
+	if json {
+		// fmt.Printf("%+v", configs)
+		// prettyJSON, err := json.MarshalIndent(&configs, "", "  ")
+		var json = jsoniter.ConfigCompatibleWithStandardLibrary
+		prettyJSON, err := json.Marshal(&configs)
+		if err != nil {
+			log.Printf("Error converting to json: %v", err)
+		}
+		fmt.Printf("%s\n", string(prettyJSON))
+	} else {
 		fmt.Println("")
 		if len(configs) == 1 {
 			fmt.Printf("DisplayName:     %v\n", configs[0].DisplayName)
@@ -31,14 +39,5 @@ func Format(configs []ContentTemplateConfig, format string) {
 			}
 			table.Render()
 		}
-	case "json":
-		// fmt.Printf("%+v", configs)
-		// prettyJSON, err := json.MarshalIndent(&configs, "", "  ")
-		var json = jsoniter.ConfigCompatibleWithStandardLibrary
-		prettyJSON, err := json.Marshal(&configs)
-		if err != nil {
-			log.Printf("Error converting to json: %v", err)
-		}
-		fmt.Printf("%s\n", string(prettyJSON))
 	}
 }
