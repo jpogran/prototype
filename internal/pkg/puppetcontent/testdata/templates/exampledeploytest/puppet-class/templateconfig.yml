@@ -1,0 +1,8 @@
+---
+name: "puppet-class"
+display_name: "Puppet Module Class"
+tags: ["class"]
+context: "puppetmodule"
+template_type: "item"
+template_url: "https://github.com/puppetlabs/puppet-class-pct"
+template_version: 0.1.0

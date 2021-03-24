@@ -99,6 +99,8 @@ func Deploy(SelectedTemplate string, LocalTemplateCache string, TargetOutput str
 		// } else {
 		// 	// use what the user tells us
 		// }
+		TargetOutput, _ = filepath.Split(TargetOutput)
+		TargetOutput = filepath.Clean(TargetOutput)
 	}
 
 	contentDir := filepath.Join(LocalTemplateCache, SelectedTemplate, "content")

@@ -1,0 +1,14 @@
+---
+name: "puppet-module"
+display_name: "Empty Puppet Module"
+tags: ["module"]
+context: "puppetmodule"
+template_type: "project"
+template_url: "https://github.com/puppetlabs/puppet-module-pct"
+template_version: 0.1.0
+template_data:
+  supported_operating_systems:
+    - name: windows
+      release: 2019
+    - name: ubuntu
+      release: 20.04

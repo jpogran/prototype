@@ -1,0 +1,28 @@
+{
+  "name": "{{.Author}}-{{.ProjectName}}",
+  "version": "{{.TemplateConfig.TemplateVersion}}",
+  "author": "{{.Author}}",
+  "summary": "{{.Summary}}",
+  "license": "{{.License}}",
+  "source": "{{.Source}}",
+  "dependencies": [],
+  "operatingsystem_support": [
+{{- range .TemplateConfig.TemplateData.SupportedOperatingSystems }}
+    {
+      "operatingsystem": "{{.Name}}",
+      "operatingsystemrelease": ["{{.Release}}"]
+    },
+{{- end}}
+  ],
+  "requirements": [
+{{- range .TemplateConfig.TemplateData.Requirements}}
+    {
+      "name": "{{.Name}}",
+      "version_requirement": "{{.VersionRequirement}}"
+    },
+{{- end}}
+  ],
+  "pdk-version": "{{.Prototype.Version}}-{{.Prototype.CommitHash}}",
+  "template-url": "{{.TemplateConfig.TemplateURL}}",
+  "template-ref": "{{.TemplateConfig.TemplateVersion}}"
+}

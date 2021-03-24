@@ -99,7 +99,7 @@ func init() {
 	home, _ := homedir.Dir()
 	newCmd.Flags().StringVar(&localTemplateCache, "templatepath", "", "Log level (debug, info, warn, error, fatal, panic")
 	viper.SetDefault("templatepath", filepath.Join(home, ".pdk", "puppet-content-templates"))
-	viper.BindPFlag("templatepath", newCmd.Flags().Lookup("templatepath"))
+	viper.BindPFlag("templatepath", newCmd.Flags().Lookup("templatepath")) //nolint:errcheck
 
 	newCmd.Flags().BoolVar(&jsonOutput, "json", false, "json output")
 	newCmd.Flags().BoolVarP(&listTemplates, "list", "l", false, "list templates")
