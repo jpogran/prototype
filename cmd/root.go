@@ -33,16 +33,16 @@ type appconfiguration struct {
 }
 
 // rootCmd represents the base command when called without any subcommands
-var rootCmd = createRootCommand()
+// var rootCmd = CreateRootCommand()
 
-func createRootCommand() *cobra.Command {
+func CreateRootCommand() *cobra.Command {
 	tmp := &cobra.Command{
 		Use:        "prototype",
 		Aliases:    []string{},
 		SuggestFor: []string{},
 		Short:      "PDK prototype content template system",
 		Long:       `PDK prototype content template system`,
-		Version:    "3.0.0",
+		// Version:    "3.0.0",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
@@ -96,15 +96,15 @@ func createRootCommand() *cobra.Command {
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	cobra.CheckErr(rootCmd.Execute())
-}
+// func Execute() {
+// 	cobra.CheckErr(rootCmd.Execute())
+// }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	// cobra.OnInitialize(InitConfig)
 }
 
-func initConfig() {
+func InitConfig() {
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	} else {
